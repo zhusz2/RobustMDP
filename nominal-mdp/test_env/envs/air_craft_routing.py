@@ -16,7 +16,7 @@ DOWN = 1
 RIGHT = 2
 UP = 3
 
-GRID_SIZE = 21
+GRID_SIZE = 11
 
 
 class AirCraftRouting(discrete.DiscreteEnv):
@@ -53,7 +53,7 @@ class AirCraftRouting(discrete.DiscreteEnv):
         nS = nrow * ncol
 
         isd = np.zeros((nrow, ncol)).astype('float64')
-        isd[nrow // 2, 0] = 1
+        isd[0, nrow // 2] = 1
         P = {s: {a: [] for a in range(nA)} for s in range(nS)}
 
         def to_s(row, col):
@@ -75,16 +75,17 @@ class AirCraftRouting(discrete.DiscreteEnv):
         # Storms, let a vertical line be the block.
         for row in range(nrow // 5, 4 * nrow // 5):
             col = ncol // 2
+            print(row, col)
             s = to_s(row, col)
             for a in range(4):
                 li = P[s][a]
                 newrow, newcol = inc(row, col, a)
                 newstate = to_s(newrow, newcol)
-                rew = 100
-                li.append((1.0, newstate, rew, False))
+                cost = 100
+                li.append((1.0, newstate, cost, False))
 
         # Add the terminal state.
-        terminal_s = to_s(nrow // 2, ncol)
+        terminal_s = to_s(nrow // 2, ncol - 1)
         for a in range(4):
             li = P[terminal_s][a]
             li.append((0.0, s, 0, True))
@@ -97,14 +98,11 @@ class AirCraftRouting(discrete.DiscreteEnv):
                     if len(li) is 0:
                         newrow, newcol = inc(row, col, a)
                         newstate = to_s(newrow, newcol)
-                        rew = 1
-                        li.append((1.0, newstate, rew, False))
+                        cost = 1
+                        li.append((1.0, newstate, cost, False))
 
         super(AirCraftRouting, self).__init__(nS, nA, P, isd)
 
     def reset(self, seed=None):
         np.random.seed(seed)
         return super(AirCraftRouting, self).reset()
-
-    def _render(self, mode='human', close=False):
-        pass

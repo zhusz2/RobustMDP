@@ -11,7 +11,7 @@ np.set_printoptions(precision=3)
 
 def BellmanOp(P, V, state, action, gamma):
     """Represent R(s,a) + gamma * sum(p(s'|(s,a)) * V(s'))
-    Notice that R(s,a) is the expected reward of execute |a| at state s.
+    Notice that R(s,a) is the expected cost of execute |a| at state s.
     Returns float value
 
     Returns
@@ -23,8 +23,9 @@ def BellmanOp(P, V, state, action, gamma):
     for t in P[state][action]:
         probability = t[0]
         nextstate = t[1]
-        reward = t[2]
-        BV += probability * (reward + gamma * V[nextstate])
+        cost = t[2]
+        # TODO(yejiayu): Here we need to work on the robust part.
+        BV += probability * (cost + gamma * V[nextstate])
     return BV
 
 
@@ -37,7 +38,7 @@ def value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
 	----------
 	P: dictionary
 		It is from gym.core.Environment
-		P[state][action] is tuples with (probability, nextstate, reward, terminal)
+		P[state][action] is tuples with (probability, nextstate, cost, terminal)
 	nS: int
 		number of states
 	nA: int
@@ -138,7 +139,7 @@ def render_single(env, policy):
 if __name__ == "__main__":
     env = gym.make("AirCraftRouting-v1")
     print(env.__doc__)
-    print("Here is an example of state, action, reward, and next state")
+    print("Here is an example of state, action, cost, and next state")
     # example(env)
     V_vi, p_vi = value_iteration(
         env.P, env.nS, env.nA, gamma=1, max_iteration=20, tol=1e-3)
