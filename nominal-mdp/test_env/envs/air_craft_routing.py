@@ -75,7 +75,6 @@ class AirCraftRouting(discrete.DiscreteEnv):
         # Storms, let a vertical line be the block.
         for row in range(nrow // 5, 4 * nrow // 5):
             col = ncol // 2
-            print(row, col)
             s = to_s(row, col)
             for a in range(4):
                 li = P[s][a]

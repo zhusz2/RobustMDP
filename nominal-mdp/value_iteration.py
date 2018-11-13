@@ -137,7 +137,8 @@ def render_single(env, policy):
 # Feel free to run your own debug code in main!
 # Play around with these hyperparameters.
 if __name__ == "__main__":
-    env = gym.make("AirCraftRouting-v1")
+    # TODO: make this an arg.
+    env = gym.make("AirCraftRouting-v2")
     print(env.__doc__)
     print("Here is an example of state, action, cost, and next state")
     # example(env)
