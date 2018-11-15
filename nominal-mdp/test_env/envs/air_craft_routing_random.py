@@ -69,7 +69,7 @@ class AirCraftRoutingRandom(discrete.DiscreteEnv):
         P = {s: {a: [] for a in range(nA)} for s in range(nS)}
 
         def to_s(row, col, storm_index):
-            assert storm_index <= 3
+            assert storm_index <= 1
             return nrow * ncol * storm_index + row * ncol + col
 
         def inc(row, col, a):
@@ -96,7 +96,7 @@ class AirCraftRoutingRandom(discrete.DiscreteEnv):
                         newrow, newcol = inc(row, col, a)
                         newstate = to_s(newrow, newcol, storm_index_after)
                         # TODO: extend to case with more obstacles
-                        cost = 100 if storm_index_after == 3 else 1
+                        cost = 100 if storm_index_after == 1 else 1
                         li.append((t_matrix[storm_index][storm_index_after],
                                    newstate, cost, False))
 
