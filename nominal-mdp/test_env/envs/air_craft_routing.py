@@ -91,11 +91,14 @@ class AirCraftRouting(discrete.DiscreteEnv):
                     newrow, newcol = inc(row, col, a)
                     newstate = to_s(newrow, newcol)
                     cost = 1
+                    # Note that this is important, since in the paper
+                    # we assume the cost of a (s,a) pair is the same for whatever s'.
+                    # This doesn't have much effect on this case.
+                    if (row, col) in self.storms:
+                        cost *= 100
                     done = (row, col) == self.terminal_pos
                     if (newrow, newcol) == self.terminal_pos:
                         li.append((1.0, newstate, cost, True))
-                    elif (newrow, newcol) in self.storms:
-                        li.append((1.0, newstate, 100, done))
                     else:
                         li.append((1.0, newstate, cost, done))
 

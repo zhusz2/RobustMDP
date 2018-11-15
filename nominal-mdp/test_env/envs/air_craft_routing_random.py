@@ -105,16 +105,16 @@ class AirCraftRoutingRandom(discrete.DiscreteEnv):
                             newrow, newcol = inc(row, col, a)
                             newstate = to_s(newrow, newcol, storm_index_after)
                             cost = 1
+                            # Note that this is important, since in the paper
+                            # we assume the cost of a (s,a) pair is the same for whatever s'.
+                            # This doesn't have much effect on this case.
+                            if (row, col) in self.storms and storm_index == 1:
+                                cost *= 100
                             done = (row, col) == self.terminal_pos
                             if (newrow, newcol) == self.terminal_pos:
                                 li.append(
                                     (t_matrix[storm_index][storm_index_after],
                                      newstate, cost, True))
-                            elif (newrow, newcol) in self.storms:
-                                cost *= 100 if storm_index == 1 else 1
-                                li.append(
-                                    (t_matrix[storm_index][storm_index_after],
-                                     newstate, cost, done))
                             else:
                                 li.append(
                                     (t_matrix[storm_index][storm_index_after],
