@@ -16,7 +16,7 @@ DOWN = 1
 RIGHT = 2
 UP = 3
 
-GRID_SIZE = 5
+GRID_SIZE = 3
 
 
 class AirCraftRouting(discrete.DiscreteEnv):
@@ -47,14 +47,14 @@ class AirCraftRouting(discrete.DiscreteEnv):
 
         self.nrow, self.ncol = nrow, ncol = (GRID_SIZE, GRID_SIZE)
 
-        self.init_pos = (nrow // 2, 0)
+        init_pos = (nrow // 2, 0)
         assert nrow % 2 == 1
 
         nA = 4
         nS = nrow * ncol
 
         isd = np.zeros((nrow, ncol)).astype('float64')
-        isd[self.init_pos] = 1
+        isd[init_pos] = 1
         P = {s: {a: [] for a in range(nA)} for s in range(nS)}
 
         def to_s(row, col):
@@ -74,37 +74,30 @@ class AirCraftRouting(discrete.DiscreteEnv):
             return (row, col)
 
         # Storms, let a vertical line be the block.
+        # BTW, here we are defining go in a storm cost high.
         self.storms = []
         for row in range(nrow // 5, 4 * nrow // 5):
             col = ncol // 2
             self.storms.append((row, col))
-            s = to_s(row, col)
-            for a in range(4):
-                li = P[s][a]
-                newrow, newcol = inc(row, col, a)
-                newstate = to_s(newrow, newcol)
-                cost = 100
-                li.append((1.0, newstate, cost, False))
 
         # Add the terminal state.
         self.terminal_pos = (nrow // 2, ncol - 1)
-        terminal_s = to_s(*(self.terminal_pos))
-        for a in range(4):
-            li = P[terminal_s][a]
-            li.append((1.0, terminal_s, 0, True))
 
         for row in range(nrow):
             for col in range(ncol):
                 s = to_s(row, col)
                 for a in range(4):
                     li = P[s][a]
-                    if len(li) is 0:
-                        newrow, newcol = inc(row, col, a)
-                        newstate = to_s(newrow, newcol)
-                        cost = 1
-                        if newstate == self.terminal_pos:
-                            li.append(1.0, newstate, cost, True)
-                        li.append((1.0, newstate, cost, False))
+                    newrow, newcol = inc(row, col, a)
+                    newstate = to_s(newrow, newcol)
+                    cost = 1
+                    done = (row, col) == self.terminal_pos
+                    if (newrow, newcol) == self.terminal_pos:
+                        li.append((1.0, newstate, cost, True))
+                    elif (newrow, newcol) in self.storms:
+                        li.append((1.0, newstate, 100, done))
+                    else:
+                        li.append((1.0, newstate, cost, done))
 
         super(AirCraftRouting, self).__init__(nS, nA, P, isd)
 
@@ -135,4 +128,5 @@ class AirCraftRouting(discrete.DiscreteEnv):
         air_map[self._decode(self.s)] = utils.colorize(
             'A', 'red', highlight=True)
         print_grid(air_map)
+        print('')
         return

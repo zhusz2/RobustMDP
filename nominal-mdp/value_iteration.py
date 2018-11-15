@@ -24,8 +24,12 @@ def BellmanOp(P, V, state, action, gamma):
         probability = t[0]
         nextstate = t[1]
         cost = t[2]
-        # TODO(yejiayu): Here we need to work on the robust part.
-        BV += probability * (cost + gamma * V[nextstate])
+        done = t[3]
+        if done:
+            BV += probability * (cost)
+        else:
+            # TODO(yejiayu): Here we need to work on the robust part.
+            BV += probability * (cost + gamma * V[nextstate])
     return BV
 
 
@@ -97,7 +101,7 @@ def example(env):
     prng.seed(10)  # for print the location
     # Generate the episode
     ob = env.reset()
-    for t in range(10):
+    for t in range(20):
         env.render()
         a = env.action_space.sample()
         ob, rew, done, _ = env.step(a)
@@ -138,10 +142,11 @@ def render_single(env, policy):
 # Play around with these hyperparameters.
 if __name__ == "__main__":
     # TODO: make this an arg.
-    env = gym.make("AirCraftRouting-v1")
+    env = gym.make("AirCraftRouting-v2")
     print(env.__doc__)
     print("Here is an example of state, action, cost, and next state")
     # example(env)
+    print(env.P)
     V_vi, p_vi = value_iteration(
         env.P, env.nS, env.nA, gamma=1, max_iteration=20, tol=1e-3)
     render_single(env, p_vi)

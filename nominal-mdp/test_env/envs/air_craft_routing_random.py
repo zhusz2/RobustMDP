@@ -64,7 +64,7 @@ class AirCraftRoutingRandom(discrete.DiscreteEnv):
 
         storm_state = [0] * k
 
-        isd = np.zeros((nrow, ncol, 2**k)).astype('float64')
+        isd = np.zeros((storm_possibilities, nrow, ncol)).astype('float64')
         isd[0, nrow // 2, 0] = 1
         P = {s: {a: [] for a in range(nA)} for s in range(nS)}
 
@@ -86,27 +86,14 @@ class AirCraftRoutingRandom(discrete.DiscreteEnv):
             return (row, col)
 
         # Storms, let a vertical line be the block.
+        # Whenver the next state is a storm, the cost is 100.
+        self.storms = []
         for row in range(nrow // 5, 4 * nrow // 5):
-            for storm_index in range(storm_possibilities):
-                for storm_index_after in range(storm_possibilities):
-                    col = ncol // 2
-                    s = to_s(row, col, storm_index)
-                    for a in range(4):
-                        li = P[s][a]
-                        newrow, newcol = inc(row, col, a)
-                        newstate = to_s(newrow, newcol, storm_index_after)
-                        # TODO: extend to case with more obstacles
-                        cost = 100 if storm_index_after == 1 else 1
-                        li.append((t_matrix[storm_index][storm_index_after],
-                                   newstate, cost, False))
+            col = ncol // 2
+            self.storms.append((row, col))
 
         # Add the terminal state.
-        for storm_index in range(storm_possibilities):
-            terminal_s = to_s(nrow // 2, ncol - 1, storm_index)
-            for storm_index_after in range(storm_possibilities):
-                for a in range(4):
-                    li = P[terminal_s][a]
-                    li.append((0.0, s, 0, True))
+        self.terminal_pos = (nrow // 2, ncol - 1)
 
         for row in range(nrow):
             for col in range(ncol):
@@ -115,17 +102,55 @@ class AirCraftRoutingRandom(discrete.DiscreteEnv):
                         s = to_s(row, col, storm_index)
                         for a in range(4):
                             li = P[s][a]
-                            if len(li) is 0:
-                                newrow, newcol = inc(row, col, a)
-                                newstate = to_s(newrow, newcol,
-                                                storm_index_after)
-                                cost = 1
+                            newrow, newcol = inc(row, col, a)
+                            newstate = to_s(newrow, newcol, storm_index_after)
+                            cost = 1
+                            done = (row, col) == self.terminal_pos
+                            if (newrow, newcol) == self.terminal_pos:
                                 li.append(
                                     (t_matrix[storm_index][storm_index_after],
-                                     newstate, cost, False))
+                                     newstate, cost, True))
+                            elif (newrow, newcol) in self.storms:
+                                cost *= 100 if storm_index == 1 else 1
+                                li.append(
+                                    (t_matrix[storm_index][storm_index_after],
+                                     newstate, cost, done))
+                            else:
+                                li.append(
+                                    (t_matrix[storm_index][storm_index_after],
+                                     newstate, cost, done))
 
         super(AirCraftRoutingRandom, self).__init__(nS, nA, P, isd)
 
     def reset(self, seed=None):
         np.random.seed(seed)
         return super(AirCraftRoutingRandom, self).reset()
+
+    def _decode(self, s):
+        '''
+            s: a number that represent the state.
+            return: a tuple like (row, col), storm_index
+        '''
+        return ((s % (self.nrow * self.ncol)) // self.ncol,
+                s % self.ncol), s // (self.ncol * self.nrow)
+
+    def render(self, random='human', close=False):
+        def print_grid(air_map):
+            for i in range(air_map.shape[0]):
+                print(air_map[i, :].tostring().decode('utf-8'))
+
+        # Generate map:
+        air_map = np.zeros((self.nrow, self.ncol), dtype='U10')
+        for i in range(self.nrow):
+            for j in range(self.ncol):
+                air_map[i, j] = '.'
+        air_map[self.terminal_pos] = 'E'
+
+        pos, storm = self._decode(self.s)
+        if storm == 1:
+            for s in self.storms:
+                air_map[s] = 'S'
+        air_map[pos] = utils.colorize('A', 'red', highlight=True)
+        print_grid(air_map)
+        print('')
+        return
