@@ -97,7 +97,7 @@ def example(env):
     prng.seed(10)  # for print the location
     # Generate the episode
     ob = env.reset()
-    for t in range(100):
+    for t in range(10):
         env.render()
         a = env.action_space.sample()
         ob, rew, done, _ = env.step(a)
@@ -131,16 +131,17 @@ def render_single(env, policy):
             break
     assert done
     env.render()
-    print("Episode reward: %f" % episode_reward)
+    print("Episode cost: %f" % episode_reward)
 
 
 # Feel free to run your own debug code in main!
 # Play around with these hyperparameters.
 if __name__ == "__main__":
     # TODO: make this an arg.
-    env = gym.make("AirCraftRouting-v2")
+    env = gym.make("AirCraftRouting-v1")
     print(env.__doc__)
     print("Here is an example of state, action, cost, and next state")
     # example(env)
     V_vi, p_vi = value_iteration(
         env.P, env.nS, env.nA, gamma=1, max_iteration=20, tol=1e-3)
+    render_single(env, p_vi)

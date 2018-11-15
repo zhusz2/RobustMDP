@@ -16,7 +16,7 @@ DOWN = 1
 RIGHT = 2
 UP = 3
 
-GRID_SIZE = 11
+GRID_SIZE = 5
 
 
 class AirCraftRouting(discrete.DiscreteEnv):
@@ -47,13 +47,14 @@ class AirCraftRouting(discrete.DiscreteEnv):
 
         self.nrow, self.ncol = nrow, ncol = (GRID_SIZE, GRID_SIZE)
 
+        self.init_pos = (nrow // 2, 0)
         assert nrow % 2 == 1
 
         nA = 4
         nS = nrow * ncol
 
         isd = np.zeros((nrow, ncol)).astype('float64')
-        isd[0, nrow // 2] = 1
+        isd[self.init_pos] = 1
         P = {s: {a: [] for a in range(nA)} for s in range(nS)}
 
         def to_s(row, col):
@@ -73,8 +74,10 @@ class AirCraftRouting(discrete.DiscreteEnv):
             return (row, col)
 
         # Storms, let a vertical line be the block.
+        self.storms = []
         for row in range(nrow // 5, 4 * nrow // 5):
             col = ncol // 2
+            self.storms.append((row, col))
             s = to_s(row, col)
             for a in range(4):
                 li = P[s][a]
@@ -84,10 +87,11 @@ class AirCraftRouting(discrete.DiscreteEnv):
                 li.append((1.0, newstate, cost, False))
 
         # Add the terminal state.
-        terminal_s = to_s(nrow // 2, ncol - 1)
+        self.terminal_pos = (nrow // 2, ncol - 1)
+        terminal_s = to_s(*(self.terminal_pos))
         for a in range(4):
             li = P[terminal_s][a]
-            li.append((0.0, s, 0, True))
+            li.append((1.0, terminal_s, 0, True))
 
         for row in range(nrow):
             for col in range(ncol):
@@ -98,10 +102,37 @@ class AirCraftRouting(discrete.DiscreteEnv):
                         newrow, newcol = inc(row, col, a)
                         newstate = to_s(newrow, newcol)
                         cost = 1
+                        if newstate == self.terminal_pos:
+                            li.append(1.0, newstate, cost, True)
                         li.append((1.0, newstate, cost, False))
 
         super(AirCraftRouting, self).__init__(nS, nA, P, isd)
 
+    def _decode(self, s):
+        '''
+            s: a number that represent the state.
+            return: a tuple like (1,2)
+        '''
+        return (s // self.ncol, s % self.ncol)
+
     def reset(self, seed=None):
         np.random.seed(seed)
         return super(AirCraftRouting, self).reset()
+
+    def render(self, mode='human', close=False):
+        def print_grid(air_map):
+            for i in range(air_map.shape[1]):
+                print(air_map[i, :].tostring().decode('utf-8'))
+
+        # Generate map:
+        air_map = np.zeros((self.nrow, self.ncol), dtype='U10')
+        for i in range(self.nrow):
+            for j in range(self.ncol):
+                air_map[i, j] = '.'
+        for s in self.storms:
+            air_map[s] = 'S'
+        air_map[self.terminal_pos] = 'E'
+        air_map[self._decode(self.s)] = utils.colorize(
+            'A', 'red', highlight=True)
+        print_grid(air_map)
+        return
