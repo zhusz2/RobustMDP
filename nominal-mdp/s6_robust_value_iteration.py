@@ -8,12 +8,49 @@ from test_env import *
 
 np.set_printoptions(precision=3)
 
+EPSILON = 0.1
 
-def BellmanOp(P, V, state, action, gamma):
-    """Represent R(s,a) + gamma * sum(p(s'|(s,a)) * V(s'))
+
+def CalculateSigma(P, V, nS, nA, gamma, sigma):
+    '''
+        Here sigma is assumed to be allocated and be modified in place.
+        Here we calculate Sigma defined (7) of Nilm, 2005
+    '''
+    for state in range(nS):
+        for action in range(nA):
+            BV = 0
+            for t in P[state][action]:
+                probability = t[0]
+                nextstate = t[1]
+                done = t[3]
+                if done:
+                    BV += 0
+                else:
+                    BV += probability * gamma * V[nextstate]
+            # Calculate per state action hat sigma.
+            hat_sigma = BV
+            # I simply have a sigma(v) for now.
+            # This should be a bound hat{sigma}(v) which is the bound
+            # hat{sigma}(v) - epsilon/N <= hat(sigma) <= hat(sigma)
+            ########################################################
+            #####################
+            ## IMPLEMENT HERE ###
+            #####################
+            # TODO(team):
+
+            ########################################################
+            assert hat_sigma >= BV
+            assert hat_sigma <= EPSILON / nS + BV
+            sigma[state, action] = hat_sigma
+    print(sigma.shape)
+
+
+def RobustBellmanOp(P, Sigma, state, action, gamma):
+    """Represent R(s,a) + gamma * Sigma 
     Notice that R(s,a) is the expected cost of execute |a| at state s.
     Returns float value
 
+    Ve is the estimated robust value function.
     Returns
     -------
     value function of state: float
@@ -27,11 +64,12 @@ def BellmanOp(P, V, state, action, gamma):
         nextstate = t[1]
         cost = t[2]
         done = t[3]
+        BV += probability * cost
+
         if done:
-            BV += probability * (cost)
+            BV += 0
         else:
-            # TODO(yejiayu): Here we need to work on the robust part.
-            BV += probability * (cost + gamma * V[nextstate])
+            BV += probability * gamma * Sigma[state, action]
     return BV
 
 
@@ -61,16 +99,21 @@ def value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
 	policy: np.ndarray
 	"""
     V = np.zeros(nS)
+
+    sigma = np.zeros((nS, nA))
+
     policy = np.zeros(nS, dtype=int)
-    ############################
-    # YOUR IMPLEMENTATION HERE #
-    ############################
     for _ in range(max_iteration):
+        print('one iter')
+        # Need to estimate sigma, which is of dimension |nS|*|nA|
+        # This can simply be p^T V for now.
+        CalculateSigma(P, V, nS, nA, gamma, sigma)
+
         newV = np.zeros(nS)
         for state in range(nS):
             BV = np.zeros(nA)
             for action in range(nA):
-                BV[action] = BellmanOp(P, V, state, action, gamma)
+                BV[action] = RobustBellmanOp(P, sigma, state, action, gamma)
             newV[state] = BV.min()
         # Calculate difference of the value functions.
         Vdiff = np.max(np.abs(newV - V))
@@ -82,7 +125,7 @@ def value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
     for state in range(nS):
         BV = np.zeros(nA)
         for action in range(nA):
-            BV[action] = BellmanOp(P, V, state, action, gamma)
+            BV[action] = RobustBellmanOp(P, sigma, state, action, gamma)
         policy[state] = np.argmin(BV)
 
     print(V)
@@ -148,18 +191,6 @@ if __name__ == "__main__":
     print(env.__doc__)
     print("Here is an example of state, action, cost, and next state")
     # example(env)
-    print(env.P)
     V_vi, p_vi = value_iteration(
-        env.Q, env.nS, env.nA, gamma=1, max_iteration=20, tol=1e-3)
+        env.P, env.nS, env.nA, gamma=1, max_iteration=20, tol=1e-3)
     render_single(env, p_vi)
-    print("------------ All the storm map ----------------")
-    print(env.storm_maps.max(0))
-    print('-----------------------------------------------')
-    '''
-    print("------------ Normial Storm Transforamtion Q ------------")
-    print(env.Qmatrix)
-    print("--------------------------------------------------------")
-    print("------------ Robust Perturbed Transforamtion P --------------")
-    print(env.Pmatrix)
-    print("-------------------------------------------------------------")
-    '''
