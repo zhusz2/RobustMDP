@@ -3,17 +3,28 @@
 import numpy as np
 from test_env import *
 
+eps = 0.001
+
 
 def SigmaDerivative(beta_max, beta, f, V, mu, nS):
-    lambda_mu = 1 / sum(f / (mu * np.ones(nS) - V))
-    const1 = sum(f / (mu * np.ones(nS) - V)**2)
-    const2 = sum(f * np.log(lambda_mu / (mu * np.ones(nS) - V)))
+    den = mu * np.ones(nS) - V
+    for i in range(nS):
+        den[i] = eps if den[i] <= 0 else den[i]
+    lambda_mu = 1 / sum(f / den)
+    const1 = sum(f / den**2)
+    const2 = sum(f * np.log(lambda_mu / den))
     return (beta_max - beta + const2) * lambda_mu**2 * const1
 
 
 def Sigma(beta, f, V, mu, nS):
-    lambda_mu = 1 / sum(f / (mu * np.ones(nS) - V))
-    const1 = sum(f * np.log(lambda_mu * f / (mu * np.ones(nS) - V)))
+    den = mu * np.ones(nS) - V
+    for i in range(nS):
+        den[i] = eps if den[i] <= 0 else den[i]
+    lambda_mu = 1 / sum(f / den)
+    const1 = 0
+    for i in range(nS):
+        if f[i]:
+            const1 += f[i] * np.log(lambda_mu * f[i] / den[i])
     return mu - (1 + beta) * lambda_mu + lambda_mu * const1
 
 
