@@ -160,5 +160,5 @@ if __name__ == "__main__":
     print(env.Qmatrix)
     print('-------------------------------------------------------')
     print('------------ Robust Perturbed Transformation P ------------')
-    print(env.storm_maps.max(0))
+    print(env.Pmatrix)
     print('-----------------------------------------------------------')
