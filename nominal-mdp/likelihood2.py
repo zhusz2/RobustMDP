@@ -51,7 +51,8 @@ def SigmaLikelihood(P, V, nS, nA, sigma, tol):
         log_like = np.zeros(nS)
         for s in range(nS):
             for s_next in P[s][a]:
-                log_like[s] += s_next[0] * np.log(s_next[0])
+                if s_next[0] > 0.0:
+                    log_like[s] += s_next[0] * np.log(s_next[0])
 
         beta_max = sum(log_like)
         beta_s_list = log_like - tol * np.ones(nS)
@@ -63,9 +64,10 @@ def SigmaLikelihood(P, V, nS, nA, sigma, tol):
             nS_next = 0
             for s_next in P[s][a]:
                 # initialize V and f
-                f.append(s_next[0])
-                V1.append(V[s_next[1]])
-                nS_next += 1
+                if s_next[0] > 0.0:
+                    f.append(s_next[0])
+                    V1.append(V[s_next[1]])
+                    nS_next += 1
             f = np.asarray(f)
             V1 = np.asarray(V1)
             V_bar = sum(V1 * f)

@@ -23,7 +23,7 @@ UP = 3
 
 # Storm State
 GRID_SIZE = 11
-K = 5
+K = 2
 assert 2 * K + 1 <= GRID_SIZE
 
 # Storm Transformation
@@ -148,7 +148,7 @@ class ComplexRoutingRandom(discrete.DiscreteEnv):
                     old_state_id = to_s(row, col, old_storm_id)
                     # Note: cost is irrelavant to the new state!
                     if storm_maps[old_storm_id, row, col] == 1:
-                        cost = 5.
+                        cost = 100.
                     else:
                         cost = 1.
                     for new_storm_id in range(tk):
