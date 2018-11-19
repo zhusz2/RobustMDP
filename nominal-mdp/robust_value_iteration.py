@@ -5,6 +5,7 @@ import numpy as np
 import gym
 import time
 from test_env import *
+from likelihood import SigmaLikelihood
 
 np.set_printoptions(precision=3)
 
@@ -98,7 +99,8 @@ def value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
 	value function: np.ndarray
 	policy: np.ndarray
 	"""
-    V = np.zeros(nS)
+    # V = np.zeros(nS)
+    V = 1000 * np.ones(nS)
 
     sigma = np.zeros((nS, nA))
 
@@ -107,7 +109,8 @@ def value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
         print('one iter')
         # Need to estimate sigma, which is of dimension |nS|*|nA|
         # This can simply be p^T V for now.
-        CalculateSigma(P, V, nS, nA, gamma, sigma)
+        # CalculateSigma(P, V, nS, nA, gamma, sigma)
+        SigmaLikelihood(P, V, nS, nA, sigma)
 
         newV = np.zeros(nS)
         for state in range(nS):
