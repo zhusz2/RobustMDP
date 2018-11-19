@@ -127,6 +127,7 @@ def render_single(env, policy):
 
     episode_reward = 0
     ob = env.reset()
+    env.seed(99)
     for t in range(100):
         env.render()
         time.sleep(0.5)  # Seconds between frames. Modify as you wish.
@@ -150,5 +151,5 @@ if __name__ == "__main__":
     # example(env)
     print(env.P)
     V_vi, p_vi = value_iteration(
-        env.P, env.nS, env.nA, gamma=1, max_iteration=20, tol=1e-3)
+        env.P, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
     render_single(env, p_vi)

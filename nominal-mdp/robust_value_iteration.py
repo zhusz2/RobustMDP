@@ -5,7 +5,7 @@ import numpy as np
 import gym
 import time
 from test_env import *
-from likelihood import SigmaLikelihood
+from likelihood2 import SigmaLikelihood
 
 np.set_printoptions(precision=3)
 
@@ -110,7 +110,7 @@ def value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
         # Need to estimate sigma, which is of dimension |nS|*|nA|
         # This can simply be p^T V for now.
         # CalculateSigma(P, V, nS, nA, gamma, sigma)
-        SigmaLikelihood(P, V, nS, nA, sigma)
+        SigmaLikelihood(P, V, nS, nA, sigma, tol)
 
         newV = np.zeros(nS)
         for state in range(nS):
@@ -173,6 +173,7 @@ def render_single(env, policy):
 
     episode_reward = 0
     ob = env.reset()
+    env.seed(99)
     for t in range(100):
         env.render()
         time.sleep(0.5)  # Seconds between frames. Modify as you wish.
@@ -195,5 +196,5 @@ if __name__ == "__main__":
     print("Here is an example of state, action, cost, and next state")
     # example(env)
     V_vi, p_vi = value_iteration(
-        env.P, env.nS, env.nA, gamma=1, max_iteration=20, tol=1e-3)
+        env.P, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
     render_single(env, p_vi)
