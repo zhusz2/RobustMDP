@@ -75,7 +75,7 @@ def SigmaLikelihood(P, V, nS, nA, sigma, tol):
             beta_s = beta_s_list[s]
 
             mu_minus = V_max
-            mu_plus = (V_max - np.exp(beta_s - beta_max) * V_bar) / (1 - np.exp(beta_s - beta_max))
+            mu_plus = (V_max * np.exp(beta_max - beta_s) - V_bar) / (np.exp(beta_max - beta_s) - 1)
             mu = mu_plus
             delta = 0.001
             while mu_plus - mu_minus > delta * (1 + mu_plus + mu_minus):
