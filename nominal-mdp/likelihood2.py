@@ -41,10 +41,10 @@ def SigmaLikelihood(P, V, nS, nA, sigma, tol):
         number of states
     nA: int
         number of actions
-    gamma: float
-        Discount factor. Number in range [0, 1)
     sigma: 2D array of floats
         Robust transition matrix
+    tol: float
+        beta margin
     """
     for a in range(nA):
         # implement independently for every action

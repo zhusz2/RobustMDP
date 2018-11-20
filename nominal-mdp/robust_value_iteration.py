@@ -6,6 +6,7 @@ import gym
 import time
 from test_env import *
 from likelihood2 import SigmaLikelihood
+from entropy import SigmaEntropy
 
 np.set_printoptions(precision=3)
 
@@ -110,7 +111,8 @@ def value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
         # Need to estimate sigma, which is of dimension |nS|*|nA|
         # This can simply be p^T V for now.
         # CalculateSigma(P, V, nS, nA, gamma, sigma)
-        SigmaLikelihood(P, V, nS, nA, sigma, tol)
+        # SigmaLikelihood(P, V, nS, nA, sigma, tol)
+        SigmaEntropy(P, V, nS, nA, sigma, tol)
 
         newV = np.zeros(nS)
         for state in range(nS):

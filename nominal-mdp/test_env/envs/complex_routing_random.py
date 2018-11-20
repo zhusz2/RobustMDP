@@ -23,7 +23,7 @@ UP = 3
 
 # Storm State
 GRID_SIZE = 11
-K = 2
+K = 3
 assert 2 * K + 1 <= GRID_SIZE
 
 # Storm Transformation
