@@ -113,6 +113,7 @@ def example(env):
     env.render()
 
 
+'''
 def render_single(env, policy):
     """Renders policy once on environment. Watch your agent play!
 
@@ -139,6 +140,41 @@ def render_single(env, policy):
     assert done
     env.render()
     print("Episode cost: %f" % episode_reward)
+'''
+
+
+def render_single(env, policy, seed_feed=99, if_render=True, iter_tot=100):
+    """Renders policy once on environment. Watch your agent play!
+
+		Parameters
+		----------
+		env: gym.core.Environment
+			Environment to play on. Must have nS, nA, and P as
+			attributes.
+		Policy: np.array of shape [env.nS]
+			The action to take at a given state
+	"""
+
+    episode_reward = 0
+    ob_list = []
+    ob = env.reset()
+    ob_list.append(ob)
+    env.seed(seed_feed)
+    for t in range(iter_tot):
+        env.render()
+        time.sleep(0.5)  # Seconds between frames. Modify as you wish.
+        a = policy[ob]
+        ob, rew, done, _ = env.step(a)
+        ob_list.append(ob)
+        episode_reward += rew
+        if done:
+            break
+    assert done
+    if if_render:
+        env.render()
+    print("Episode cost: %f" % episode_reward)
+    return episode_reward, ob_list
+
 
 
 # Feel free to run your own debug code in main!
