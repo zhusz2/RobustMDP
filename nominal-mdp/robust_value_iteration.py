@@ -1,12 +1,14 @@
 ### MDP Value Iteration and Policy Iteratoin
 # You might not need to use all parameters
 
+from test_env.envs.common import render_state
 import numpy as np
 import gym
 import time
 from test_env import *
 from likelihood2 import SigmaLikelihood
 from entropy import SigmaEntropy
+from value_iteration import value_iteration
 
 np.set_printoptions(precision=3)
 
@@ -48,7 +50,7 @@ def CalculateSigma(P, V, nS, nA, gamma, sigma):
 
 
 def RobustBellmanOp(P, Sigma, state, action, gamma):
-    """Represent R(s,a) + gamma * Sigma 
+    """Represent R(s,a) + gamma * Sigma
     Notice that R(s,a) is the expected cost of execute |a| at state s.
     Returns float value
 
@@ -75,7 +77,7 @@ def RobustBellmanOp(P, Sigma, state, action, gamma):
     return BV
 
 
-def value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
+def robust_value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
     """
 	Learn value function and policy by using value iteration method for a given
 	gamma and environment.
@@ -161,7 +163,7 @@ def example(env):
     env.render()
 
 
-def render_single(env, policy):
+def render_single(env, policy, seed_feed=99, if_render=True, iter_tot=100):
     """Renders policy once on environment. Watch your agent play!
 
 		Parameters
@@ -174,29 +176,62 @@ def render_single(env, policy):
 	"""
 
     episode_reward = 0
+    ob_list = []
     ob = env.reset()
-    env.seed(99)
-    for t in range(100):
+    ob_list.append(ob)
+    env.seed(seed_feed)
+    for t in range(iter_tot):
         env.render()
         time.sleep(0.5)  # Seconds between frames. Modify as you wish.
         a = policy[ob]
         ob, rew, done, _ = env.step(a)
+        ob_list.append(ob)
         episode_reward += rew
         if done:
             break
     assert done
-    env.render()
+    if if_render:
+        env.render()
     print("Episode cost: %f" % episode_reward)
+    return episode_reward, ob_list
 
 
 # Feel free to run your own debug code in main!
 # Play around with these hyperparameters.
-if __name__ == "__main__":
+def main_render_robust():
     # TODO: make this an arg.
-    env = gym.make("AirCraftRouting-v3")
+    env = gym.make("AirCraftRouting-v4")
     print(env.__doc__)
     print("Here is an example of state, action, cost, and next state")
     # example(env)
-    V_vi, p_vi = value_iteration(
+    V_vi, p_vi = robust_value_iteration(
         env.P, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
     render_single(env, p_vi)
+    print('------------ All the storm map ------------')
+    render_state(env.nS - 1, env.nrow, env.ncol, env.storm_maps, env.terminal_pos)
+    # print(env.storm_maps.max(0))
+    print('-------------------------------------------')
+
+
+def main_experiments():
+    env = gym.make("AirCraftRouting-v4")
+    V_vi, p_vi = robust_value_iteration(
+        env.P, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
+    V_old, p_old = value_iteration(
+        env.P, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
+    ret_robust = []
+    ret_normial = []
+    exp_tot = 5
+    for j in range(exp_tot):
+        ret, _ = render_single(env, p_vi, j, False)
+        ret_robust.append(ret)
+        ret, _ = render_single(env, p_old, j, False)
+        ret_normial.append(ret)
+        print("Finish exp iter %d out of %d" % (j, exp_tot))
+    print(sum(ret_robust) / float(exp_tot))
+    print(sum(ret_normial) / float(exp_tot))
+    import ipdb
+    ipdb.set_trace()
+
+if __name__ == '__main__':
+    main_experiments()
