@@ -4,36 +4,28 @@ import numpy as np
 from test_env import *
 
 eps = 0.01
-large = 1e10
+large = 15
 
 
 def SigmaDerivative(beta, q1, V, mu, nS):
-    if mu <= eps:
+    if mu <= eps or max(V / mu) > large:
         # limiting value when mu -> 0
         arg = np.argmax(V)
         q_m = q1[arg]
         return beta + np.log(q_m)
 
     const1 = sum(q1 * np.exp(V / mu))
-    if const1 > large:
-        # limiting value when mu -> 0
-        arg = np.argmax(V)
-        q_m = q1[arg]
-        return beta + np.log(q_m)
 
     const2 = sum(q1 * np.exp(V / mu) * V)
     return np.log(const1) + beta - const2 / (mu * const1)
 
 
 def Sigma(beta, q1, V, mu, nS):
-    if mu <= eps:
+    if mu <= eps or max(V / mu) > large:
         # limiting value when mu -> 0
         return max(V)
 
     const1 = np.log(sum(q1 * np.exp(V / mu)))
-    if const1 > large:
-        # limiting value when mu -> 0
-        return max(V)
 
     return mu * const1 + beta * mu
 
