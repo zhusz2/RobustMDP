@@ -151,13 +151,14 @@ def render_single(env, policy, seed_feed=99, if_render=True, iter_tot=100):
 # Play around with these hyperparameters.
 if __name__ == "__main__":
     # TODO: make this an arg.
-    env = gym.make("AirCraftRouting-v3")
+    env = gym.make("AirCraftRoutingSimple-v1")
     print(env.__doc__)
     # print("Here is an example of state, action, cost, and next state")
     # example(env)
     # print(env.P)
     V_vi, p_vi = value_iteration(
-        env.Q, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
+        env.P, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
+    print(env.P)
     render_single(env, p_vi)
     print('------------ All the storm map ------------')
     print(env.storm_maps.max(0))

@@ -22,3 +22,9 @@ register(
     id='AirCraftRouting-v4',
     entry_point='test_env.envs.exp_routing_random:ExpRoutingRandom',
 )
+
+register(
+    id='AirCraftRoutingSimple-v1',
+    entry_point=
+    'test_env.envs.robust_air_routing_testcase:AirCraftRoutingSimple',
+)

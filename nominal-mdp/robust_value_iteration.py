@@ -6,7 +6,7 @@ import numpy as np
 import gym
 import time
 from test_env import *
-from likelihood2 import SigmaLikelihood
+from likelihood import SigmaLikelihood
 from entropy import SigmaEntropy
 from value_iteration import value_iteration
 
@@ -78,8 +78,8 @@ def robust_value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
         print('one iter')
         # Need to estimate sigma, which is of dimension |nS|*|nA|
         # This can simply be p^T V for now.
-        # SigmaLikelihood(P, V, nS, nA, sigma, tol)
-        SigmaEntropy(P, V, nS, nA, sigma, tol)
+        SigmaLikelihood(P, V, nS, nA, sigma, 1)
+        # SigmaEntropy(P, V, nS, nA, sigma, tol)
 
         newV = np.zeros(nS)
         for state in range(nS):
@@ -102,6 +102,7 @@ def robust_value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
 
     print(V)
     print(policy)
+    print(sigma)
     return V, policy
 
 
