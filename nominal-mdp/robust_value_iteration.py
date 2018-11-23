@@ -15,40 +15,6 @@ np.set_printoptions(precision=3)
 EPSILON = 0.1
 
 
-def CalculateSigma(P, V, nS, nA, gamma, sigma):
-    '''
-        Here sigma is assumed to be allocated and be modified in place.
-        Here we calculate Sigma defined (7) of Nilm, 2005
-    '''
-    for state in range(nS):
-        for action in range(nA):
-            BV = 0
-            for t in P[state][action]:
-                probability = t[0]
-                nextstate = t[1]
-                done = t[3]
-                if done:
-                    BV += 0
-                else:
-                    BV += probability * gamma * V[nextstate]
-            # Calculate per state action hat sigma.
-            hat_sigma = BV
-            # I simply have a sigma(v) for now.
-            # This should be a bound hat{sigma}(v) which is the bound
-            # hat{sigma}(v) - epsilon/N <= hat(sigma) <= hat(sigma)
-            ########################################################
-            #####################
-            ## IMPLEMENT HERE ###
-            #####################
-            # TODO(team):
-
-            ########################################################
-            assert hat_sigma >= BV
-            assert hat_sigma <= EPSILON / nS + BV
-            sigma[state, action] = hat_sigma
-    print(sigma.shape)
-
-
 def RobustBellmanOp(P, Sigma, state, action, gamma):
     """Represent R(s,a) + gamma * Sigma
     Notice that R(s,a) is the expected cost of execute |a| at state s.
@@ -112,7 +78,6 @@ def robust_value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
         print('one iter')
         # Need to estimate sigma, which is of dimension |nS|*|nA|
         # This can simply be p^T V for now.
-        # CalculateSigma(P, V, nS, nA, gamma, sigma)
         # SigmaLikelihood(P, V, nS, nA, sigma, tol)
         SigmaEntropy(P, V, nS, nA, sigma, tol)
 
@@ -208,7 +173,8 @@ def main_render_robust():
         env.P, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
     render_single(env, p_vi)
     print('------------ All the storm map ------------')
-    render_state(env.nS - 1, env.nrow, env.ncol, env.storm_maps, env.terminal_pos)
+    render_state(env.nS - 1, env.nrow, env.ncol, env.storm_maps,
+                 env.terminal_pos)
     # print(env.storm_maps.max(0))
     print('-------------------------------------------')
 
@@ -232,6 +198,7 @@ def main_experiments():
     print(sum(ret_normial) / float(exp_tot))
     import ipdb
     ipdb.set_trace()
+
 
 if __name__ == '__main__':
     main_experiments()

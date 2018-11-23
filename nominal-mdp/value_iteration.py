@@ -91,13 +91,14 @@ def value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
 
 
 def example(env):
-    """Show an example of gym
+    """
+    Show an example of gym
 	Parameters
-		----------
-		env: gym.core.Environment
-			Environment to play on. Must have nS, nA, and P as
-			attributes.
-	"""
+	----------
+	env: gym.core.Environment
+		Environment to play on. Must have nS, nA, and P as
+		attributes.
+    """
     env.seed(0)
     from gym.spaces import prng
     prng.seed(10)  # for print the location
@@ -111,36 +112,6 @@ def example(env):
             break
     assert done
     env.render()
-
-
-'''
-def render_single(env, policy):
-    """Renders policy once on environment. Watch your agent play!
-
-		Parameters
-		----------
-		env: gym.core.Environment
-			Environment to play on. Must have nS, nA, and P as
-			attributes.
-		Policy: np.array of shape [env.nS]
-			The action to take at a given state
-	"""
-
-    episode_reward = 0
-    ob = env.reset()
-    env.seed(99)
-    for t in range(100):
-        env.render()
-        time.sleep(0.5)  # Seconds between frames. Modify as you wish.
-        a = policy[ob]
-        ob, rew, done, _ = env.step(a)
-        episode_reward += rew
-        if done:
-            break
-    assert done
-    env.render()
-    print("Episode cost: %f" % episode_reward)
-'''
 
 
 def render_single(env, policy, seed_feed=99, if_render=True, iter_tot=100):
@@ -174,7 +145,6 @@ def render_single(env, policy, seed_feed=99, if_render=True, iter_tot=100):
         env.render()
     print("Episode cost: %f" % episode_reward)
     return episode_reward, ob_list
-
 
 
 # Feel free to run your own debug code in main!
