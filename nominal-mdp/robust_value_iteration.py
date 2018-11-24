@@ -9,10 +9,13 @@ from test_env import *
 from likelihood import SigmaLikelihood
 from entropy import SigmaEntropy
 from value_iteration import value_iteration
+import os
 
 np.set_printoptions(precision=3)
 
 EPSILON = 0.1
+np.set_printoptions(suppress=True)
+np.set_printoptions(linewidth=200)
 
 
 def RobustBellmanOp(P, Sigma, state, action, gamma):
@@ -34,12 +37,12 @@ def RobustBellmanOp(P, Sigma, state, action, gamma):
         nextstate = t[1]
         cost = t[2]
         done = t[3]
-        BV += probability * cost
+        # BV += probability * cost
 
         if done:
-            BV += 0
+            BV += probability * cost
         else:
-            BV += probability * gamma * Sigma[state, action]
+            BV += probability * (cost + gamma * Sigma[state, action])
     return BV
 
 
@@ -68,42 +71,39 @@ def robust_value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
 	value function: np.ndarray
 	policy: np.ndarray
 	"""
-    # V = np.zeros(nS)
-    V = 1000 * np.ones(nS)
-
+    V = np.zeros(nS)
+    V.fill(1000.)
+    # V.fill(np.inf)
     sigma = np.zeros((nS, nA))
-
     policy = np.zeros(nS, dtype=int)
-    for _ in range(max_iteration):
+    for iter_count in range(max_iteration):
         print('one iter')
-        # Need to estimate sigma, which is of dimension |nS|*|nA|
-        # This can simply be p^T V for now.
         SigmaLikelihood(P, V, nS, nA, sigma, 1)
         # SigmaEntropy(P, V, nS, nA, sigma, tol)
-
         newV = np.zeros(nS)
         for state in range(nS):
             BV = np.zeros(nA)
             for action in range(nA):
                 BV[action] = RobustBellmanOp(P, sigma, state, action, gamma)
             newV[state] = BV.min()
+        if os.environ['D'] == 'robust':
+            print(np.transpose(sigma.reshape((2, 5, 5, 4)), (0, 1, 3, 2)).reshape(2, 5, 4 * 5))
+            print(newV.reshape((2, 5, 5)))
+            print('iter_count for robust is %d' % iter_count)
+            import ipdb
+            ipdb.set_trace()
         # Calculate difference of the value functions.
         Vdiff = np.max(np.abs(newV - V))
         V = newV
         if Vdiff < tol:
             break
-
     # Calculate the policy.
     for state in range(nS):
         BV = np.zeros(nA)
         for action in range(nA):
             BV[action] = RobustBellmanOp(P, sigma, state, action, gamma)
         policy[state] = np.argmin(BV)
-
-    print(V)
-    print(policy)
-    print(sigma)
-    return V, policy
+    return V, policy, sigma
 
 
 def example(env):
@@ -170,7 +170,7 @@ def main_render_robust():
     print(env.__doc__)
     print("Here is an example of state, action, cost, and next state")
     # example(env)
-    V_vi, p_vi = robust_value_iteration(
+    V_vi, p_vi, sigma_vi = robust_value_iteration(
         env.P, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
     render_single(env, p_vi)
     print('------------ All the storm map ------------')
@@ -182,10 +182,20 @@ def main_render_robust():
 
 def main_experiments():
     env = gym.make("AirCraftRouting-v4")
-    V_vi, p_vi = robust_value_iteration(
-        env.P, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
+    render_state(env.nS - 1, env.nrow, env.ncol, env.storm_maps,
+            env.terminal_pos)
+    V_vi, p_vi, sigma_vi = robust_value_iteration(
+        env.Q, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
     V_old, p_old = value_iteration(
-        env.P, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
+        env.Q, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
+    print("-------------- Value of robust --------------")
+    print(V_vi.reshape((2, 5, 5)))
+    print(p_vi.reshape((2, 5, 5)))
+    print("-------------- Value of nomial --------------")
+    print(V_old.reshape((2, 5, 5)))
+    print(p_old.reshape((2, 5, 5)))
+    import ipdb
+    ipdb.set_trace()
     ret_robust = []
     ret_normial = []
     exp_tot = 5
