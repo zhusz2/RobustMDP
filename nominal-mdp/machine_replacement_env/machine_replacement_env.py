@@ -15,7 +15,7 @@ class MachineReplacementEnv(discrete.DiscreteEnv):
             for a in range(nA):
                 li = P[s][a]
                 if a == 0:
-                    if s < nS:
+                    if s < nS-1:
                         newstate = s+1
                         cost = np.random.normal(0, 1e-4) #N(0, 1e-4)
                     else:
@@ -23,7 +23,7 @@ class MachineReplacementEnv(discrete.DiscreteEnv):
                         cost = np.random.normal(100, 800)
                 if a == 1:
                     newstate = 0
-                    if s < nS:
+                    if s < nS-1:
                         cost = np.random.normal(130, 1)
                     else:
                         cost = np.random.normal(130, 20)
