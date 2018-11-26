@@ -6,11 +6,12 @@ from machine_replacement_env import MachineReplacementEnv, MachineReplacementDir
 
 discount_factor = 0.8
 # uncertanity in transitions
-#env = MachineReplacementDirichletEnv()
+env = MachineReplacementDirichletEnv()
+print env.P
 
 # uncertainty in rewards
-env = MachineReplacementEnv()
-print env.P
+#env = MachineReplacementEnv()
+#print env.P
 
 '''
 # uncertainty in rewards
