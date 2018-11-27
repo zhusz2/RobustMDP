@@ -77,8 +77,8 @@ def robust_value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
     sigma = np.zeros((nS, nA))
     policy = np.zeros(nS, dtype=int)
     for iter_count in range(max_iteration):
-        print('one iter')
-        SigmaLikelihood(P, V, nS, nA, sigma, 1)
+        print(iter_count)
+        SigmaLikelihood(P, V, nS, nA, sigma, 0.05, iter_count)
         # SigmaEntropy(P, V, nS, nA, sigma, tol)
         newV = np.zeros(nS)
         for state in range(nS):
