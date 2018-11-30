@@ -9,10 +9,13 @@ from test_env import *
 from likelihood import SigmaLikelihood
 from entropy import SigmaEntropy
 from value_iteration import value_iteration
+import os
 
 np.set_printoptions(precision=3)
 
 EPSILON = 0.1
+np.set_printoptions(suppress=True)
+np.set_printoptions(linewidth=200)
 
 
 def RobustBellmanOp(P, Sigma, state, action, gamma):
@@ -68,17 +71,17 @@ def robust_value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
 	value function: np.ndarray
 	policy: np.ndarray
 	"""
-    # V = np.zeros(nS)
-    V = 1000 * np.ones(nS)
+    V = np.zeros(nS)
+    V.fill(1000)
 
     sigma = np.zeros((nS, nA))
 
     policy = np.zeros(nS, dtype=int)
-    for _ in range(max_iteration):
-        print('one iter')
+    for iter_count in range(max_iteration):
+        print(iter_count)
         # Need to estimate sigma, which is of dimension |nS|*|nA|
         # This can simply be p^T V for now.
-        SigmaLikelihood(P, V, nS, nA, sigma, 1)
+        SigmaLikelihood(P, V, nS, nA, sigma, 0.05, iter_count)
         # SigmaEntropy(P, V, nS, nA, sigma, tol)
 
         newV = np.zeros(nS)
@@ -100,10 +103,7 @@ def robust_value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
             BV[action] = RobustBellmanOp(P, sigma, state, action, gamma)
         policy[state] = np.argmin(BV)
 
-    print(V)
-    print(policy)
-    print(sigma)
-    return V, policy
+    return V, policy, sigma
 
 
 def example(env):
@@ -170,7 +170,7 @@ def main_render_robust():
     print(env.__doc__)
     print("Here is an example of state, action, cost, and next state")
     # example(env)
-    V_vi, p_vi = robust_value_iteration(
+    V_vi, p_vi, sigma_vi = robust_value_iteration(
         env.P, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
     render_single(env, p_vi)
     print('------------ All the storm map ------------')
@@ -181,11 +181,19 @@ def main_render_robust():
 
 
 def main_experiments():
-    env = gym.make("AirCraftRouting-v4")
-    V_vi, p_vi = robust_value_iteration(
-        env.P, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
+    env = gym.make("MachineReplacement-v2")
+    # render_state(env.nS - 1, env.nrow, env.ncol, env.storm_maps,
+    #              env.terminal_pos)
+    V_vi, p_vi, sigma_vi = robust_value_iteration(
+        env.P, env.nS, env.nA, gamma=1, max_iteration=500, tol=1e-3)
     V_old, p_old = value_iteration(
-        env.P, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
+        env.P, env.nS, env.nA, gamma=1, max_iteration=500, tol=1e-3)
+    print("-------------- Value of robust --------------")
+    print(V_vi)
+    print(p_vi)
+    print("-------------- Value of nominal --------------")
+    print(V_old)
+    print(p_old)
     ret_robust = []
     ret_normial = []
     exp_tot = 5
@@ -197,8 +205,8 @@ def main_experiments():
         print("Finish exp iter %d out of %d" % (j, exp_tot))
     print(sum(ret_robust) / float(exp_tot))
     print(sum(ret_normial) / float(exp_tot))
-    import ipdb
-    ipdb.set_trace()
+    import pdb
+    pdb.set_trace()
 
 
 if __name__ == '__main__':

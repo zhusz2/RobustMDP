@@ -5,6 +5,7 @@ import numpy as np
 import gym
 import time
 from test_env import *
+import os
 
 np.set_printoptions(precision=3)
 
@@ -60,12 +61,13 @@ def value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
 	value function: np.ndarray
 	policy: np.ndarray
 	"""
-    V = np.zeros(nS)
+    V = np.zeros((nS,), dtype=float)
+    V.fill(np.inf)
     policy = np.zeros(nS, dtype=int)
     ############################
     # YOUR IMPLEMENTATION HERE #
     ############################
-    for _ in range(max_iteration):
+    for iter_count in range(max_iteration):
         newV = np.zeros(nS)
         for state in range(nS):
             BV = np.zeros(nA)
@@ -85,8 +87,6 @@ def value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
             BV[action] = BellmanOp(P, V, state, action, gamma)
         policy[state] = np.argmin(BV)
 
-    print(V)
-    print(policy)
     return V, policy
 
 

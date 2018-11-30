@@ -26,17 +26,28 @@ RIGHT = 2
 UP = 3
 
 # Storm maps
-GRID_SIZE = 11
-K = 4
+GRID_SIZE = 5
+K = 1
 assert 2 * K + 1 <= GRID_SIZE
 RUN_ID = 0  # Generate and store on a differently generated randomness under the same setting
 MAP_FILE = 'random_store/GS_%d_K_%d_RUN_%d.npy' % (GRID_SIZE, K, RUN_ID)
 AREA_UP_BOUND = math.ceil(GRID_SIZE * GRID_SIZE / float(K))
 
-# Perturbation
-SINGLE_G2G = 0.95
-SINGLE_B2B = 0.90
-E = 0.05  # always added to 2B and decreased to 2G
+# Q Single
+Q_SINGLE_G2G = .9
+Q_SINGLE_G2B = 1. - Q_SINGLE_G2G
+Q_SINGLE_B2B = .1
+Q_SINGLE_B2G = 1. - Q_SINGLE_B2B
+# P Perturbation
+E = 0.75  # always added to 2B and decreased to 2G
+P_SINGLE_G2G = Q_SINGLE_G2G - E
+P_SINGLE_G2B = 1. - P_SINGLE_G2G
+P_SINGLE_B2B = Q_SINGLE_B2B + E
+P_SINGLE_B2G = 1. - P_SINGLE_B2B
+
+# Cost
+COST_NORMAL = 1.
+COST_STORM = 10.
 
 if os.path.isfile(MAP_FILE):
     each_storm_map_bbox = np.load(MAP_FILE)
@@ -125,13 +136,13 @@ class ExpRoutingRandom(discrete.DiscreteEnv):
         for i in range(tk):
             bool_list = stormID2BoolList(i)
             for j in range(len(bool_list)):
-                if bool_list[j]:  # there is the storm at this column
+                if bool_list[j]:  # j-th storm is on
                     storm_maps[i,
                             each_storm_map_bbox[j][2]:each_storm_map_bbox[j][3],
                             each_storm_map_bbox[j][0]:each_storm_map_bbox[j][1]
                             ] = 1.
 
-        # Conventions: Q is the normial distribution and P is the perturbed one
+        # Conventions: Q is the nominal distribution and P is the perturbed one
         # Define Qs: only care about the transformation between storms
         # Define Ps: only care about the transformation between storms
         Qs = np.zeros((tk, tk), np.float32)
@@ -145,9 +156,9 @@ class ExpRoutingRandom(discrete.DiscreteEnv):
                 count_B2G = sum([bool_list_i[z] and not bool_list_j[z] for z in range(k)])
                 count_B2B = sum([bool_list_i[z] and bool_list_j[z] for z in range(k)])
                 Qs[i, j] = calcTransProb(count_G2G, count_G2B, count_B2G, count_B2B,
-                        SINGLE_G2G, 1. - SINGLE_B2B, 1. - SINGLE_G2G, SINGLE_B2B)
+                        Q_SINGLE_G2G, Q_SINGLE_G2B, Q_SINGLE_B2G, Q_SINGLE_B2B)
                 Ps[i, j] = calcTransProb(count_G2G, count_G2B, count_B2G, count_B2B,
-                        SINGLE_G2G - E, 1. - SINGLE_B2B - E, 1. - SINGLE_G2G + E, SINGLE_B2B + E)
+                        P_SINGLE_G2G, P_SINGLE_G2B, P_SINGLE_B2G, P_SINGLE_B2B)
 
         # Put Ps into P, Qs into Q:
         Q = {s: {a: [] for a in range(nA)} for s in range(nS)}
@@ -160,9 +171,9 @@ class ExpRoutingRandom(discrete.DiscreteEnv):
                     old_state_id = to_s(row, col, old_storm_id)
                     # Note: cost is irrelavant to the new state!
                     if storm_maps[old_storm_id, row, col] == 1:
-                        cost = 5.
+                        cost = COST_STORM
                     else:
-                        cost = 1.
+                        cost = COST_NORMAL
                     for new_storm_id in range(tk):
                         for a in range(4):
                             newrow, newcol = inc(row, col, a)
