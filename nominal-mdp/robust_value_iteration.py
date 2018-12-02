@@ -46,7 +46,7 @@ def RobustBellmanOp(P, Sigma, state, action, gamma):
     return BV
 
 
-def robust_value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
+def robust_value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3, tol2=1.0):
     """
 	Learn value function and policy by using value iteration method for a given
 	gamma and environment.
@@ -73,13 +73,16 @@ def robust_value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
 	"""
     V = np.zeros(nS)
     V.fill(1000.)
-    # V.fill(np.inf)
     sigma = np.zeros((nS, nA))
     policy = np.zeros(nS, dtype=int)
     for iter_count in range(max_iteration):
         print(iter_count)
-        SigmaLikelihood(P, V, nS, nA, sigma, 0.05, iter_count)
-        # SigmaEntropy(P, V, nS, nA, sigma, tol)
+
+        # Need to estimate sigma, which is of dimension |nS|*|nA|
+        # This can simply be p^T V for now.
+        SigmaLikelihood(P, V, nS, nA, sigma, tol2, iter_count)
+        # SigmaEntropy(P, V, nS, nA, sigma, tol2)
+
         newV = np.zeros(nS)
         for state in range(nS):
             BV = np.zeros(nA)
@@ -155,7 +158,7 @@ def render_single(env, policy, seed_feed=99, if_render=True, iter_tot=100):
         episode_reward += rew
         if done:
             break
-    assert done
+    # assert done
     if if_render:
         env.render()
     print("Episode cost: %f" % episode_reward)
@@ -196,19 +199,36 @@ def main_experiments():
     print(p_old.reshape((2, 5, 5)))
     import ipdb
     ipdb.set_trace()
+    '''
+    env = gym.make("MachineReplacement-v2")
+    # render_state(env.nS - 1, env.nrow, env.ncol, env.storm_maps,
+    #              env.terminal_pos)
+    V_vi, p_vi, sigma_vi = robust_value_iteration(
+        env.Q, env.nS, env.nA, gamma=0.9, max_iteration=500, tol=1e-3, tol2=0.1)
+    V_old, p_old = value_iteration(
+        env.Q, env.nS, env.nA, gamma=0.9, max_iteration=500, tol=1e-3)
+    print("-------------- Value of robust --------------")
+    print(V_vi)
+    print(p_vi)
+    print("-------------- Value of nominal --------------")
+    print(V_old)
+    print(p_old)
+    '''
     ret_robust = []
     ret_normial = []
     exp_tot = 5
     for j in range(exp_tot):
-        ret, _ = render_single(env, p_vi, j, False)
+        print('robust')
+        ret, _ = render_single(env, p_vi, j, False, iter_tot=15)
         ret_robust.append(ret)
-        ret, _ = render_single(env, p_old, j, False)
+        print('nominal')
+        ret, _ = render_single(env, p_old, j, False, iter_tot=15)
         ret_normial.append(ret)
-        print("Finish exp iter %d out of %d" % (j, exp_tot))
+        print("Finish exp iter %d out of %d" % (j+1, exp_tot))
     print(sum(ret_robust) / float(exp_tot))
     print(sum(ret_normial) / float(exp_tot))
-    import ipdb
-    ipdb.set_trace()
+    # import pdb
+    # pdb.set_trace()
 
 
 if __name__ == '__main__':

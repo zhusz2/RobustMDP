@@ -54,7 +54,6 @@ def SigmaLikelihood(P, V, nS, nA, sigma, tol, outer_iter_count):
                 if s_next[0] > 0.0:
                     log_like[s] += s_next[0] * np.log(s_next[0])
 
-        # beta_max = sum(log_like)
         beta_s_list = log_like - tol * np.ones(nS)
 
         for s in range(nS):
@@ -74,11 +73,9 @@ def SigmaLikelihood(P, V, nS, nA, sigma, tol, outer_iter_count):
             V_max = max(V1)
             beta_s = beta_s_list[s]
             beta_max = log_like[s]
-            # beta_s = beta_max - tol
 
             mu_minus = V_max
-            # mu_plus = (V_max * np.exp(beta_max - beta_s) - V_bar) / (np.exp(beta_max - beta_s) - 1)
-            mu_plus = (V_max - V_bar * np.exp(-tol)) / (1. - np.exp(-tol))
+            mu_plus = (V_max - V_bar * np.exp(-tol)) / (1 - np.exp(-tol))
             mu = mu_plus
             delta = 0.001
             '''

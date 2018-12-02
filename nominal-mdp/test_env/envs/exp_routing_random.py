@@ -49,7 +49,6 @@ P_SINGLE_B2G = 1. - P_SINGLE_B2B
 COST_NORMAL = 1.
 COST_STORM = 10.
 
-
 if os.path.isfile(MAP_FILE):
     each_storm_map_bbox = np.load(MAP_FILE)
 else:

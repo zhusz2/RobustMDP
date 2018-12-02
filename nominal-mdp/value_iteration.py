@@ -62,7 +62,7 @@ def value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
 	policy: np.ndarray
 	"""
     V = np.zeros((nS,), dtype=float)
-    V.fill(np.inf)
+    V.fill(1000)
     policy = np.zeros(nS, dtype=int)
     ############################
     # YOUR IMPLEMENTATION HERE #
