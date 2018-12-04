@@ -28,7 +28,7 @@ def Sigma(beta, f, V, mu, nS):
     return mu - (1 + beta) * lambda_mu + lambda_mu * const1
 
 
-def SigmaLikelihood(P, V, nS, nA, sigma, tol, outer_iter_count):
+def SigmaLikelihood(P, V, nS, nA, sigma, tol):
     """
     Parameters:
     ----------
@@ -78,11 +78,6 @@ def SigmaLikelihood(P, V, nS, nA, sigma, tol, outer_iter_count):
             mu_plus = (V_max - V_bar * np.exp(-tol)) / (1 - np.exp(-tol))
             mu = mu_plus
             delta = 0.001
-            '''
-            if s == 12 and a == 2 and outer_iter_count == 1:
-                import ipdb
-                ipdb.set_trace()
-            '''
             while mu_plus - mu_minus > delta * (1 + mu_plus + mu_minus):
                 mu = (mu_plus + mu_minus) / 2
                 # calculate SigmaDerivative at mu

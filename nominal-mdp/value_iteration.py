@@ -74,11 +74,6 @@ def value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
             for action in range(nA):
                 BV[action] = BellmanOp(P, V, state, action, gamma)
             newV[state] = BV.min()
-        if os.environ['D'] == 'nominal':
-            print(newV.reshape((2, 5, 5)))
-            print('iter_count for nominal is %d' % iter_count)
-            import ipdb
-            ipdb.set_trace()
         # Calculate difference of the value functions.
         Vdiff = np.max(np.abs(newV - V))
         V = newV
