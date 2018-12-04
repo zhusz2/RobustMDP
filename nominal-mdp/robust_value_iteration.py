@@ -191,6 +191,34 @@ def main_experiments():
         V_old, p_old = value_iteration(
             env.Q, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
         exp_tot = 3
+        if env.tk == 2:
+            # Without the storm
+            cloth = np.concatenate((
+                V_vi.reshape((env.tk, config.grid_size, config.grid_size))[0],
+                np.ones((config.grid_size, 1)) * V_vi.reshape((env.tk, config.grid_size, config.grid_size))[0].max(),
+                V_old.reshape((env.tk, config.grid_size, config.grid_size))[0],
+                ), 1)
+            plt.imshow(cloth)
+            plt.show()
+
+            # With the storm
+            cloth = np.concatenate((
+                V_vi.reshape((env.tk, config.grid_size, config.grid_size))[1],
+                np.ones((config.grid_size, 1)) * V_vi.reshape((env.tk, config.grid_size, config.grid_size))[1].max(),
+                V_old.reshape((env.tk, config.grid_size, config.grid_size))[1],
+                ), 1)
+            plt.imshow(cloth)
+            plt.show()
+            '''
+            for z in range(env.tk):
+                plt.subplot(121)
+                plt.imshow(V_vi.reshape((env.tk, config.grid_size, config.grid_size))[z])
+                plt.subplot(122)
+                plt.imshow(V_old.reshape((env.tk, config.grid_size, config.grid_size))[z])
+                plt.show()
+            '''
+        import ipdb
+        ipdb.set_trace()
         for j in range(exp_tot):
             if config.action == 'plot_robust':
                 print('robust')
@@ -200,13 +228,14 @@ def main_experiments():
                 print('nominal')
                 ret, _ = render_single(env, p_old, j, True, iter_tot=1000)
                 ret_normial.append(ret)
+            print("Finish exp iter %d out of %d" % (j+1, exp_tot))
             import ipdb
             ipdb.set_trace()
-            print("Finish exp iter %d out of %d" % (j+1, exp_tot))
         if config.action == 'plot_robust':
             print(sum(ret_robust) / float(exp_tot))
         if config.action == 'plot_nominal':
             print(sum(ret_normial) / float(exp_tot))
+        '''
         if config.action == 'plot_robust':
             V_vi = V_vi.reshape((env.tk, env.grid_size, env.grid_size))
             V_old = V_old.reshape((env.tk, env.grid_size, env.grid_size))
@@ -217,6 +246,7 @@ def main_experiments():
                 plt.subplot(2, env.tk, env.tk + j)
                 plt.imshow(V_old[j])
             plt.show()
+        '''
     elif config.action == 'epsilon_sweep':
         plot_num_samples = 10
         exp_tot = 30
