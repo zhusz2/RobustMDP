@@ -191,7 +191,7 @@ def main_experiments():
         V_old, p_old = value_iteration(
             env.Q, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
         exp_tot = 3
-        if env.tk == 2:
+        if env.tk == 2 and config.action == 'plot_robust':
             # Without the storm
             cloth = np.concatenate((
                 V_vi.reshape((env.tk, config.grid_size, config.grid_size))[0],
