@@ -191,6 +191,7 @@ def main_experiments():
         V_old, p_old = value_iteration(
             env.Q, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
         exp_tot = 3
+        '''
         if env.tk == 2 and config.action == 'plot_robust':
             # Without the storm
             cloth = np.concatenate((
@@ -209,14 +210,9 @@ def main_experiments():
                 ), 1)
             plt.imshow(cloth)
             plt.show()
-            '''
-            for z in range(env.tk):
-                plt.subplot(121)
-                plt.imshow(V_vi.reshape((env.tk, config.grid_size, config.grid_size))[z])
-                plt.subplot(122)
-                plt.imshow(V_old.reshape((env.tk, config.grid_size, config.grid_size))[z])
-                plt.show()
-            '''
+        '''
+        savemat('values.mat', {'v_nominal': V_old.reshape((env.tk, config.grid_size, config.grid_size)), 'v_robust': V_vi.reshape((env.tk, config.grid_size, config.grid_size))})
+        exit()
         import ipdb
         ipdb.set_trace()
         for j in range(exp_tot):
@@ -248,19 +244,37 @@ def main_experiments():
             plt.show()
         '''
     elif config.action == 'sweep':
-        epsilon_tot = 3
-        cost_tot = 3
+        '''  Setting 1 get 20x20
+        epsilon_tot = 20
+        cost_tot = 20
         exp_tot = 30
 
         epsilon_max = min(config.g2g, 1. - config.b2b)
         epsilon_sweep = np.arange(0.001, epsilon_max, epsilon_max / float(epsilon_tot + 2))
-        epsilon_record = np.zeros((epsilon_tot, ), dtype=float)
-
         cost_sweep = np.arange(1., float(1. + epsilon_tot), 1.)
-        cost_record = np.zeros((cost_tot, ), dtype=float)
+        '''
+
+        ''' Setting 2 get 200x1
+        epsilon_tot = 200
+        cost_tot = 1
+        exp_tot = 30
+
+        epsilon_max = min(config.g2g, 1. - config.b2b)
+        epsilon_sweep = np.arange(0.001, epsilon_max, epsilon_max / float(epsilon_tot + 2))
+        cost_sweep = np.array([5.])
+        '''
+
+        epsilon_tot = 1
+        cost_tot = 200
+        exp_tot = 30
+
+        epsilon_sweep = np.array([0.328])
+        cost_sweep = np.arange(1., 14., 13./ float(cost_tot + 2))
 
         ret_robust = np.zeros((epsilon_tot, cost_tot, exp_tot), dtype=float)
         ret_nominal = np.zeros((epsilon_tot, cost_tot, exp_tot), dtype=float)
+        epsilon_record = np.zeros((epsilon_tot, ), dtype=float)
+        cost_record = np.zeros((cost_tot, ), dtype=float)
 
         for epsilon_index in range(epsilon_tot):
             for cost_index in range(cost_tot):
@@ -284,37 +298,7 @@ def main_experiments():
                     ret_robust[epsilon_index, cost_index, exp_index], _ = render_single(env, p_robust, exp_index, False, iter_tot=1000)
                     ret_nominal[epsilon_index, cost_index, exp_index], _ = render_single(env, p_old, exp_index, False, iter_tot=1000)
 
-        savemat('GS_%d_K_%d_RUN_%d_G2G_%.2f_B2B_%.2f_sweep.mat' % (config.grid_size, config.k, config.run_id, config.g2g, config.b2b), {'epsilon_record': epsilon_record, 'cost_record': cost_record, 'ret_robust': ret_robust, 'ret_nominal': ret_nominal})
-    elif config.action == 'tol2_sweep':
-        exp_tot = 30
-        tol2_sweep = 10. ** np.arange(-2.5, 2, 0.5)
-        tol2_record = tol2_sweep
-        plot_num_samples = tol2_sweep.shape[0]
-        ret_likelihood = np.zeros((plot_num_samples, exp_tot), dtype=float)
-        ret_entropy = np.zeros((plot_num_samples, exp_tot), dtype=float)
-        ret_nominal = np.zeros((plot_num_samples, exp_tot), dtype=float)
-        env = gym.make('AirCraftRouting-v4')
-        env.set(config)
-        for epsilon_index in range(plot_num_samples):
-            # config.epsilon = epsilon_sweep[epsilon_index]
-            print('epsilon_index %d out of %d, tol2=%.2f' % (epsilon_index, plot_num_samples, tol2_record[epsilon_index]))
-
-            _, p_likelihood, _ = robust_value_iteration(
-                    SigmaLikelihood, env.Q, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3, tol2=tol2_record[epsilon_index])
-            p_entropy = p_likelihood
-            '''
-            _, p_entropy, _ = robust_value_iteration(
-                    SigmaEntropy, env.Q, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
-            '''
-            if epsilon_index == 0:
-                _, p_old = value_iteration(
-                        env.Q, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
-            for exp_index in range(exp_tot):
-                print('  exp_index %d out of %d' % (exp_index, exp_tot))
-                ret_likelihood[epsilon_index, exp_index], _ = render_single(env, p_likelihood, exp_index, False, iter_tot=1000)
-                ret_entropy[epsilon_index, exp_index], _ = render_single(env, p_entropy, exp_index, False, iter_tot=1000)
-                ret_nominal[epsilon_index, exp_index], _ = render_single(env, p_old, exp_index, False, iter_tot=1000)
-        savemat('COST_%.2f_GS_%d_K_%d_RUN_%d_G2G_%.2f_B2B_%.2f_tol2_sweep.mat' % (config.cost_storm, config.grid_size, config.k, config.run_id, config.g2g, config.b2b), {'epsilonrecord': tol2_record, 'ret_likelihood': ret_likelihood, 'ret_entropy': ret_entropy, 'ret_nominal': ret_nominal})
+        savemat('GS_%d_K_%d_RUN_%d_G2G_%.2f_B2B_%.2f_sweep_%dby%d.mat' % (config.grid_size, config.k, config.run_id, config.g2g, config.b2b, epsilon_tot, cost_tot), {'epsilon_record': epsilon_record, 'cost_record': cost_record, 'ret_robust': ret_robust, 'ret_nominal': ret_nominal})
     else:
         print('LOL')
 
