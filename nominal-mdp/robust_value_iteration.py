@@ -187,7 +187,7 @@ def main_experiments():
         ret_robust = []
         ret_normial = []
         V_vi, p_vi, sigma_vi = robust_value_iteration(
-            SigmaLikelihood, env.Q, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
+            SigmaLikelihood, env.Q, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3, tol2=config.epsilon / 0.45)
         V_old, p_old = value_iteration(
             env.Q, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
         exp_tot = 3
@@ -247,39 +247,44 @@ def main_experiments():
                 plt.imshow(V_old[j])
             plt.show()
         '''
-    elif config.action == 'epsilon_sweep':
-        plot_num_samples = 10
+    elif config.action == 'sweep':
+        epsilon_tot = 3
+        cost_tot = 3
         exp_tot = 30
-        epsilon_max = min(config.g2g, 1. - config.b2b)
-        epsilon_sweep = np.arange(0., epsilon_max, epsilon_max / float(plot_num_samples + 2))
-        epsilon_record = np.zeros((plot_num_samples, ), dtype=float)
-        ret_likelihood = np.zeros((plot_num_samples, exp_tot), dtype=float)
-        ret_entropy = np.zeros((plot_num_samples, exp_tot), dtype=float)
-        ret_nominal = np.zeros((plot_num_samples, exp_tot), dtype=float)
-        for epsilon_index in range(plot_num_samples):
-            config.epsilon = epsilon_sweep[epsilon_index]
-            env = gym.make('AirCraftRouting-v4')
-            env.set(config)
-            print('epsilon_index %d out of %d, epsilon=%.2f' % (epsilon_index, plot_num_samples, config.epsilon))
 
-            _, p_likelihood, _ = robust_value_iteration(
-                    SigmaLikelihood, env.Q, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
-            p_entropy = p_likelihood
-            '''
-            _, p_entropy, _ = robust_value_iteration(
-                    SigmaEntropy, env.Q, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
-            '''
-            if epsilon_index == 0:
+        epsilon_max = min(config.g2g, 1. - config.b2b)
+        epsilon_sweep = np.arange(0.001, epsilon_max, epsilon_max / float(epsilon_tot + 2))
+        epsilon_record = np.zeros((epsilon_tot, ), dtype=float)
+
+        cost_sweep = np.arange(1., float(1. + epsilon_tot), 1.)
+        cost_record = np.zeros((cost_tot, ), dtype=float)
+
+        ret_robust = np.zeros((epsilon_tot, cost_tot, exp_tot), dtype=float)
+        ret_nominal = np.zeros((epsilon_tot, cost_tot, exp_tot), dtype=float)
+
+        for epsilon_index in range(epsilon_tot):
+            for cost_index in range(cost_tot):
+                config.epsilon = epsilon_sweep[epsilon_index]
+                config.cost_storm = cost_sweep[cost_index]
+                env = gym.make('AirCraftRouting-v4')
+                env.set(config)
+                print('epsilon_index %d out of %d, epsilon=%.4f. cost_index %d out of %d, cost=%.4f.' \
+                        % (epsilon_index, epsilon_tot, config.epsilon, cost_index, cost_tot, config.cost_storm))
+
                 _, p_old = value_iteration(
                         env.Q, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
-            epsilon_record[epsilon_index] = config.epsilon
-            for exp_index in range(exp_tot):
-                print('  exp_index %d out of %d' % (exp_index, exp_tot))
-                ret_likelihood[epsilon_index, exp_index], _ = render_single(env, p_likelihood, exp_index, False, iter_tot=1000)
-                ret_entropy[epsilon_index, exp_index], _ = render_single(env, p_entropy, exp_index, False, iter_tot=1000)
-                ret_nominal[epsilon_index, exp_index], _ = render_single(env, p_old, exp_index, False, iter_tot=1000)
+                _, p_robust, _ = robust_value_iteration(
+                        SigmaLikelihood, env.Q, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3, tol2=epsilon_sweep[epsilon_index] / 0.45)
 
-        savemat('COST_%.2f_GS_%d_K_%d_RUN_%d_G2G_%.2f_B2B_%.2f_epsilon_sweep.mat' % (config.cost_storm, config.grid_size, config.k, config.run_id, config.g2g, config.b2b), {'epsilonrecord': epsilon_record, 'ret_likelihood': ret_likelihood, 'ret_entropy': ret_entropy, 'ret_nominal': ret_nominal})
+                epsilon_record[epsilon_index] = config.epsilon
+                cost_record[cost_index] = config.cost_storm
+
+                for exp_index in range(exp_tot):
+                    print('  exp_index %d out of %d' % (exp_index, exp_tot))
+                    ret_robust[epsilon_index, cost_index, exp_index], _ = render_single(env, p_robust, exp_index, False, iter_tot=1000)
+                    ret_nominal[epsilon_index, cost_index, exp_index], _ = render_single(env, p_old, exp_index, False, iter_tot=1000)
+
+        savemat('GS_%d_K_%d_RUN_%d_G2G_%.2f_B2B_%.2f_sweep.mat' % (config.grid_size, config.k, config.run_id, config.g2g, config.b2b), {'epsilon_record': epsilon_record, 'cost_record': cost_record, 'ret_robust': ret_robust, 'ret_nominal': ret_nominal})
     elif config.action == 'tol2_sweep':
         exp_tot = 30
         tol2_sweep = 10. ** np.arange(-2.5, 2, 0.5)
