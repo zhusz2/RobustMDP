@@ -191,7 +191,6 @@ def main_experiments():
         V_old, p_old = value_iteration(
             env.Q, env.nS, env.nA, gamma=1, max_iteration=100, tol=1e-3)
         exp_tot = 3
-        '''
         if env.tk == 2 and config.action == 'plot_robust':
             # Without the storm
             cloth = np.concatenate((
@@ -215,6 +214,7 @@ def main_experiments():
         exit()
         import ipdb
         ipdb.set_trace()
+        '''
         for j in range(exp_tot):
             if config.action == 'plot_robust':
                 print('robust')
@@ -231,18 +231,6 @@ def main_experiments():
             print(sum(ret_robust) / float(exp_tot))
         if config.action == 'plot_nominal':
             print(sum(ret_normial) / float(exp_tot))
-        '''
-        if config.action == 'plot_robust':
-            V_vi = V_vi.reshape((env.tk, env.grid_size, env.grid_size))
-            V_old = V_old.reshape((env.tk, env.grid_size, env.grid_size))
-            for j in range(env.tk):
-                plt.subplot(1, env.tk, j)
-                plt.imshow(V_vi[j])
-            for j in range(env.tk):
-                plt.subplot(2, env.tk, env.tk + j)
-                plt.imshow(V_old[j])
-            plt.show()
-        '''
     elif config.action == 'sweep':
         '''  Setting 1 get 20x20
         epsilon_tot = 20
@@ -264,6 +252,7 @@ def main_experiments():
         cost_sweep = np.array([5.])
         '''
 
+        # Setting 3 get 1x200
         epsilon_tot = 1
         cost_tot = 200
         exp_tot = 30
